@@ -5,7 +5,7 @@ using Feather
 using Query
 using Pipe
 
-mutable struct AxelrodAgent <: AbstractAgent
+mutable struct AxelrodAgent <: Agents.AbstractAgent
     id::Int
     pos::NTuple{2, Int}
     stubborn::Bool
@@ -13,34 +13,36 @@ mutable struct AxelrodAgent <: AbstractAgent
 end
 
 function initialize_model(dims::NTuple{2, Int}, stubborn_positions::AbstractArray)
-    space = GridSpace(dims, periodic=false, moore=false)
-    model = AgentBasedModel(AxelrodAgent, space, scheduler=random_activation)
+    space = Agents.GridSpace(dims, periodic=false, moore=false)
+    model = Agents.AgentBasedModel(AxelrodAgent, space, scheduler=random_activation)
     populate!(model, dims)
     to_stubborn!(stubborn_positions, model)
     return model
 end
 
-function populate!(model::AgentBasedModel, dims::NTuple{2, Int})
+function populate!(model::Agents.AgentBasedModel, dims::NTuple{2, Int})
     positions = [(i, j) for i in 1:dims[1] for j in 1:dims[2]]
     for (id, pos) in enumerate(positions)
-        add_agent_pos!(AxelrodAgent(id, pos, false, rand(0:9, 5)), model)
+        Agents.add_agent_pos!(AxelrodAgent(id, pos, false, rand(0:9, 5)), model)
     end
     return model
 end
 
-function to_stubborn!(positions::Array{NTuple{2, Int}}, model)
+function to_stubborn!(positions::Array{NTuple{2, Int}}, model::Agents.AgentBasedModel)
     for pos in positions
-        stubborn_agent = get_node_agents(coord2vertex(pos, model), model)[1]
+        stubborn_agent = Agents.get_node_agents(Agents.coord2vertex(pos, model), model)[1]
         stubborn_agent.stubborn = true
         stubborn_agent.culture = zeros(Int64, 5)
     end
     return model
 end
 
-function agent_step!(agent::AbstractAgent, model::AgentBasedModel)
-    neighbors = node_neighbors(agent, model)
-    interaction_partner_pos = sample(neighbors)
-    interaction_partner = get_node_agents(coord2vertex(interaction_partner_pos, model), model)[1]
+function agent_step!(agent::Agents.AbstractAgent, model::Agents.AgentBasedModel)
+    neighbors = Agents.node_neighbors(agent, model)
+    interaction_partner_pos = StatsBase.sample(neighbors)
+    interaction_partner = Agents.get_node_agents(
+        Agents.coord2vertex(interaction_partner_pos, model), model
+    )[1]
     similarity = StatsBase.mean(agent.culture .== interaction_partner.culture)
     if !(similarity == 1.0) & !agent.stubborn & (rand() <= similarity)
         assimilate!(agent, interaction_partner)
@@ -48,7 +50,7 @@ function agent_step!(agent::AbstractAgent, model::AgentBasedModel)
     return agent
 end
 
-function assimilate!(agent::AbstractAgent, interaction_partner::AbstractAgent)
+function assimilate!(agent::Agents.AbstractAgent, interaction_partner::Agents.AbstractAgent)
 	random_attr = rand(1:length(agent.culture))
 	if !(agent.culture[random_attr] == interaction_partner.culture[random_attr])
 		agent.culture[random_attr] = interaction_partner.culture[random_attr]
@@ -58,11 +60,11 @@ function assimilate!(agent::AbstractAgent, interaction_partner::AbstractAgent)
 	return agent
 end
 
-function prepare_data!(dataframe::DataFrame)
+function prepare_data!(dataframe::DataFrames.DataFrame)
     dataframe[!, "culture"] = [join(c) for c in dataframe[!, "culture"]]
     agent_df[!, :x] = [i[1] for i in agent_df[!, :pos]]
     agent_df[!, :y] = [i[2] for i in agent_df[!, :pos]]
-    select!(agent_df, DataFrames.Not(:pos))
+    DataFrames.select!(agent_df, DataFrames.Not(:pos))
     return dataframe
 end
 
@@ -86,7 +88,10 @@ stubborn_positions = [(1, 1), (4, 4), (7, 7), (10, 10)]
 stubborn_positions = [(3, 3), (3, 7), (7, 3), (7, 7)]
 
 model = initialize_model((10, 10), stubborn_positions)
-agent_df, _ = run!(model, agent_step!, 1000, adata=[:pos, :culture], replicates=10, parallel=true)
+agent_df, _ = Agents.run!(
+    model, agent_step!, 1000, adata=[:pos, :culture], 
+    replicates=10, parallel=true, obtainer=deepcopy
+)
 prepare_data!(agent_df)
-@pipe agent_df |> last(_, 100) |> print
+@pipe agent_df |> first(_, 100) |> print
 Feather.write("test.feather", agent_df)
