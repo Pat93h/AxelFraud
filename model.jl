@@ -80,15 +80,27 @@ random = [(rand(1:10), rand(1:10)) for i in 1:4]
 corners = [(1, 1), (1, 10), (10, 1), (10, 10)]
 diagonal = [(1, 1), (4, 4), (7, 7), (10, 10)]
 distance_center = [(3, 3), (3, 7), (7, 3), (7, 7)]
+config_list = [
+    baseline, line_edge, line_center, square_corner, square_center, 
+    random, corners, diagonal, distance_center
+]
+filename_list = [
+    "baseline", "line_edge", "line_center", "square_corner", "square_center", 
+    "random", "corners", "diagonal", "distance_center"
+]
 
 ##
-stubborn_positions = random
-model = initialize_model((10, 10), stubborn_positions)
-agent_df, _ = Agents.run!(
-    model, agent_step!, 1000, adata=[:pos, :culture], 
-    replicates=100, parallel=true, obtainer=deepcopy
-)
-prepare_data!(agent_df)
-Feather.write("random.feather", agent_df)
+for (config, filename) in zip(config_list, filename_list)
+    model = initialize_model((10, 10), config)
+    agent_df, _ = Agents.run!(
+        model, agent_step!, 3000, adata=[:pos, :culture], 
+        replicates=300, 
+        when=0:10:3000, 
+        parallel=true, 
+        obtainer=deepcopy
+    )
+    agent_df = prepare_data!(agent_df)
+    Feather.write(filename * ".feather", agent_df)
+end
 
 ##
