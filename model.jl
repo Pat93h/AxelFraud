@@ -64,9 +64,9 @@ end
 
 function prepare_data!(dataframe::DataFrames.DataFrame)
     dataframe[!, "culture"] = [join(c) for c in dataframe[!, "culture"]]
-    agent_df[!, :x] = [i[1] for i in agent_df[!, :pos]]
-    agent_df[!, :y] = [i[2] for i in agent_df[!, :pos]]
-    DataFrames.select!(agent_df, DataFrames.Not(:pos))
+    dataframe[!, :x] = [i[1] for i in dataframe[!, :pos]]
+    dataframe[!, :y] = [i[2] for i in dataframe[!, :pos]]
+    DataFrames.select!(dataframe, DataFrames.Not(:pos))
     return dataframe
 end
 
