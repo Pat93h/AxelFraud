@@ -1,0 +1,174 @@
+---
+title: "Exploratory Analysis"
+author: "Johannes Nakayama"
+date: "3 11 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(arrow)
+library(igraph)
+library(here)
+library(magrittr)
+library(viridis)
+library(ggpubr)
+source("helpers.R")
+SAVE_PLOT <- FALSE
+COLOR <- "firebrick"
+```
+
+## Data
+
+```{r}
+data <- arrow::read_feather(here::here("data", "square_corner.feather"))
+
+data$step %<>% as.numeric()
+data$id %<>% as.numeric()
+data$culture %<>% as.character()
+data$replicate %<>% as.numeric()
+data$x %<>% as.numeric()
+data$y %<>% as.numeric()
+```
+
+
+## Distribution
+
+```{r}
+data %>% 
+  filter(step == max(step)) %>%
+  filter(culture == "00000") %>% 
+  group_by(replicate) %>% 
+  summarize(count = n()) %>% 
+  ungroup() -> tmp
+
+tmp %>% 
+  ggplot(aes(x = count)) +
+  geom_histogram(fill = COLOR, alpha = 0.7, binwidth = 4) +
+  # scale_y_continuous(breaks = seq(0, 100, by = 20)) +
+  labs(
+    title = "Distribution of stubborn culture",
+    x = "Number of agents with stubborn culture",
+    y = "Amount of replicates"
+  ) +
+  theme_axelfraud() +
+  NULL
+
+if(SAVE_PLOT){ggsave(filename = "distribution_end.png", width = 10, height = 4, dpi = 300)}
+```
+
+
+# Development of Cultures
+
+```{r}
+color_scheme <- viridis(300, option = "plasma")
+color_scheme2 <- rep(COLOR, 300)
+alpha <- 0.05
+
+data %>% 
+  filter(culture == "00000") %>% 
+  # filter(replicate == 6) %>% 
+  group_by(step, replicate, culture) %>% 
+  summarize(count = n()) %>% 
+  ungroup() -> tmp
+
+tmp %>% 
+  ggplot(aes(x = step, y = count, color = as.factor(replicate))) +
+  geom_line(alpha = alpha, size = 2) +
+  scale_color_manual(values = color_scheme2) +
+  labs(
+    title = "Development of stubborn culture",
+    x = "Step",
+    y = "Stubborn culture count"
+  ) +
+  theme(legend.position = "None") +
+  theme_axelfraud()
+
+if(SAVE_PLOT){ggsave(filename = "culture_development.png", width = 10, height = 4, dpi = 300)}
+```
+
+```{r}
+library(agrmt)
+
+data
+
+agreement()
+
+```
+
+
+
+# Measurements
+
+shortterm:
+
+  * van der Eijk's A (measurement of agreement)
+  * refer to https://en.wikipedia.org/wiki/Multimodal_distribution for other measurements  
+  * stubborn threshold value? (at some point -> stubborn culture wins?)
+  * fit logistic curve to different replicates -> find turning point
+  * activity parameter (comparison with last step)
+  * van der Eijk's A for every step -> plot
+  * correct implementation of random configuration
+
+longterm:
+  
+  * manipulate stubborn count
+  * other network types
+  * informed agents
+  * interval scale for cultures
+
+
+
+# Unique Cultures
+
+```{r}
+color_scheme <- viridis(300, option = "plasma")
+color_scheme2 <- rep(COLOR, 300)
+
+data %>% 
+  group_by(step, replicate, culture) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  group_by(step, replicate) %>% 
+  summarize(unique_cultures = n()) %>% 
+  ungroup() -> tmp
+
+tmp %>% 
+  ggplot(aes(x = step, y = unique_cultures, color = as.factor(replicate))) +
+  geom_line(alpha = 0.05, size = 2) +
+  scale_color_manual(values = color_scheme2) +
+  labs(
+    title = "Development of unique culture count",
+    x = "Step",
+    y = "Unique cultures"
+  ) +
+  theme(legend.position = "None") +
+  theme_axelfraud()
+
+if(SAVE_PLOT){ggsave(filename = "unique_cultures.png", width = 10, height = 4, dpi = 300)}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
