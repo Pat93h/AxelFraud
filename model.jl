@@ -90,6 +90,9 @@ filename_list = [
 ]
 
 ##
+if !("data" in readdir())
+    mkdir("data")
+end
 for (config, filename) in zip(config_list, filename_list)
     model = initialize_model((10, 10), config)
     agent_df, _ = Agents.run!(
@@ -100,7 +103,7 @@ for (config, filename) in zip(config_list, filename_list)
         obtainer=deepcopy
     )
     agent_df = prepare_data!(agent_df)
-    Feather.write(filename * ".feather", agent_df)
+    Feather.write(joinpath("data", filename * ".feather"), agent_df)
 end
 
 ##
