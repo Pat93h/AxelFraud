@@ -62,11 +62,12 @@ function assimilate!(agent::Agents.AbstractAgent, interaction_partner::Agents.Ab
 	return agent
 end
 
-function prepare_data!(dataframe::DataFrames.DataFrame)
+function prepare_data!(dataframe::DataFrames.DataFrame, config_name::String)
     dataframe[!, "culture"] = [join(c) for c in dataframe[!, "culture"]]
     dataframe[!, :x] = [i[1] for i in dataframe[!, :pos]]
     dataframe[!, :y] = [i[2] for i in dataframe[!, :pos]]
     DataFrames.select!(dataframe, DataFrames.Not(:pos))
+    dataframe[!, :config] .= config_name
     return dataframe
 end
 

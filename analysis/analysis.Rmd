@@ -9,91 +9,151 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(arrow)
-library(igraph)
 library(here)
 library(magrittr)
-library(viridis)
 library(ggpubr)
 source("helpers.R")
-SAVE_PLOT <- FALSE
+SAVE <- TRUE  # set TRUE if you want to save the plots
 COLOR <- "firebrick"
+if (!("figures" %in% list.files()) & SAVE) {dir.create("figures", showWarnings = FALSE)}
 ```
 
 ## Data
 
 ```{r}
-data <- arrow::read_feather(here::here("data", "square_corner.feather"))
-
-data$step %<>% as.numeric()
-data$id %<>% as.numeric()
-data$culture %<>% as.character()
-data$replicate %<>% as.numeric()
-data$x %<>% as.numeric()
-data$y %<>% as.numeric()
+# read datasets ----
+baseline <- load_data(here::here("..", "data", "baseline.feather"))
+corners <- load_data(here::here("..", "data", "corners.feather"))
+diagonal <- load_data(here::here("..", "data", "diagonal.feather"))
+distance_center <- load_data(here::here("..", "data", "distance_center.feather"))
+line_center <- load_data(here::here("..", "data", "line_center.feather"))
+line_edge <- load_data(here::here("..", "data", "line_edge.feather"))
+random <- load_data(here::here("..", "data", "random.feather"))
+square_center <- load_data(here::here("..", "data", "square_center.feather"))
+square_corner <- load_data(here::here("..", "data", "square_corner.feather"))
 ```
 
 
 ## Distribution
 
 ```{r}
-data %>% 
-  filter(step == max(step)) %>%
-  filter(culture == "00000") %>% 
-  group_by(replicate) %>% 
-  summarize(count = n()) %>% 
-  ungroup() -> tmp
+# generics ----
+binwidth <- 1
 
-tmp %>% 
-  ggplot(aes(x = count)) +
-  geom_histogram(fill = COLOR, alpha = 0.7, binwidth = 4) +
-  # scale_y_continuous(breaks = seq(0, 100, by = 20)) +
-  labs(
-    title = "Distribution of stubborn culture",
-    x = "Number of agents with stubborn culture",
-    y = "Amount of replicates"
-  ) +
-  theme_axelfraud() +
-  NULL
+# plotting ----
+corners_distribution <- distribution_plot(
+  dataset = corners, title = "Corners", binwidth = binwidth, color = COLOR
+)
+diagonal_distribution <- distribution_plot(
+  dataset = diagonal, title = "Diagonal", binwidth = binwidth, color = COLOR
+)
+distance_center_distribution <- distribution_plot(
+  dataset = distance_center, title = "Distance center", binwidth = binwidth, color = COLOR
+)
+line_center_distribution <- distribution_plot(
+  dataset = line_center, title = "Line center", binwidth = binwidth, color = COLOR
+)
+line_edge_distribution <- distribution_plot(
+  dataset = line_edge, title = "Line edge", binwidth = binwidth, color = COLOR
+)
+random_distribution <- distribution_plot(
+  dataset = random, title = "Random", binwidth = binwidth, color = COLOR
+)
+square_center_distribution <- distribution_plot(
+  dataset = square_center, title = "Square center", binwidth = binwidth, color = COLOR
+)
+square_corner_distribution <- distribution_plot(
+  dataset = square_corner, title = "Square corner", binwidth = binwidth, color = COLOR
+)
 
-if(SAVE_PLOT){ggsave(filename = "distribution_end.png", width = 10, height = 4, dpi = 300)}
+ggarrange(
+  corners_distribution, diagonal_distribution, distance_center_distribution, line_center_distribution, 
+  line_edge_distribution, random_distribution, square_center_distribution, square_corner_distribution,
+  ncol = 2, nrow = 4
+) +
+  theme_axelfraud_arrange()
+
+# saving ----
+if(SAVE){ggsave(filename = here::here("figures", "distribution.png"), width = 10, height = 10, dpi = 300)}
 ```
 
 
 # Development of Cultures
 
 ```{r}
-color_scheme <- viridis(300, option = "plasma")
-color_scheme2 <- rep(COLOR, 300)
+# generics ----
 alpha <- 0.05
+size <- 2
 
-data %>% 
-  filter(culture == "00000") %>% 
-  # filter(replicate == 6) %>% 
-  group_by(step, replicate, culture) %>% 
-  summarize(count = n()) %>% 
-  ungroup() -> tmp
+# plotting ----
+corners_development <- development_plot(
+  dataset = corners, title = "Corners", alpha = alpha, size = size, color = COLOR
+)
+diagonal_development <- development_plot(
+  dataset = diagonal, title ="Diagonal", alpha = alpha, size = size, color = COLOR
+)
+distance_center_development <- development_plot(
+  dataset = distance_center, title = "Distance center", alpha = alpha, size = size, color = COLOR
+)
+line_center_development <- development_plot(
+  dataset = line_center, title = "Line center", alpha = alpha, size = size, color = COLOR
+)
+line_edge_development <- development_plot(
+  dataset = line_edge, title = "Line edge", alpha = alpha, size = size, color = COLOR
+)
+random_development <- development_plot(
+  dataset = random, title = "Random", alpha = alpha, size = size, color = COLOR
+)
+square_center_development <- development_plot(
+  dataset = square_center, title = "Square center", alpha = alpha, size = size, color = COLOR
+)
+square_corner_development <- development_plot(
+  dataset = square_corner, title = "Square corner", alpha = alpha, size = size, color = COLOR
+)
 
-tmp %>% 
-  ggplot(aes(x = step, y = count, color = as.factor(replicate))) +
-  geom_line(alpha = alpha, size = 2) +
-  scale_color_manual(values = color_scheme2) +
-  labs(
-    title = "Development of stubborn culture",
-    x = "Step",
-    y = "Stubborn culture count"
-  ) +
-  theme(legend.position = "None") +
-  theme_axelfraud()
+ggarrange(
+  corners_development, diagonal_development, distance_center_development, line_center_development,
+  line_edge_development, random_development, square_center_development, square_corner_development,
+  ncol = 2, nrow = 4
+) +
+  theme_axelfraud_arrange()
 
-if(SAVE_PLOT){ggsave(filename = "culture_development.png", width = 10, height = 4, dpi = 300)}
+# saving ----
+if(SAVE){ggsave(filename = here::here("figures", "development.png"), width = 10, height = 10, dpi = 300)}
 ```
 
-```{r}
+```{r, eval=FALSE}
 library(agrmt)
 
-data
+random %>% 
+  filter(step == max(step)) %>% 
+  filter(culture == "00000") %>% 
+  group_by(replicate) %>% 
+  summarize(stubborn_culture_count = n()) %>% 
+  ungroup() %>% 
+  mutate(stubborn_culture_grouped = ceiling(stubborn_culture_count / 10)) %>% 
+  group_by(stubborn_culture_grouped) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  mutate(count = as.numeric(count)) -> tmp
 
-agreement()
+agreement(tmp$count)
+polarization(tmp$count)
+consensus(tmp$count)
+consensus.variance(tmp$count)
+concentration(tmp$count)
+BerryMielke(tmp$count)
+BlairLacy(tmp$count)
+lsquared(tmp$count)
+lsquared.variance(tmp$count)
+l.variance(tmp$count)
+dispersion(tmp$count)
+Reardon(tmp$count)
+entropy(tmp$count)
+Leik(tmp$count)
+ajus(tmp$count)
+ajusPlot(tmp$count)
+
 
 ```
 
@@ -110,6 +170,7 @@ shortterm:
   * activity parameter (comparison with last step)
   * van der Eijk's A for every step -> plot
   * correct implementation of random configuration
+  * agrmt package -> other measures
 
 longterm:
   
@@ -122,7 +183,7 @@ longterm:
 
 # Unique Cultures
 
-```{r}
+```{r, eval=FALSE}
 color_scheme <- viridis(300, option = "plasma")
 color_scheme2 <- rep(COLOR, 300)
 
@@ -146,7 +207,7 @@ tmp %>%
   theme(legend.position = "None") +
   theme_axelfraud()
 
-if(SAVE_PLOT){ggsave(filename = "unique_cultures.png", width = 10, height = 4, dpi = 300)}
+if(SAVE){ggsave(filename = "unique_cultures.png", width = 10, height = 4, dpi = 300)}
 ```
 
 
