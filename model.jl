@@ -1,3 +1,4 @@
+## 
 using Agents
 using StatsBase
 using DataFrames
@@ -5,6 +6,7 @@ using Feather
 using Query
 using Pipe
 
+##
 mutable struct AxelrodAgent <: Agents.AbstractAgent
     id::Int
     pos::NTuple{2, Int}
@@ -68,30 +70,25 @@ function prepare_data!(dataframe::DataFrames.DataFrame)
     return dataframe
 end
 
-# baseline
-stubborn_positions = NTuple{2, Int}[]
-# line/edge
-stubborn_positions = [(1, 1), (1, 2), (1, 3), (1, 4)]
-# line/center
-stubborn_positions = [(5, 3), (5, 4), (5, 5), (5, 6)]
-# square/corner
-stubborn_positions = [(1, 1), (1, 2), (2, 1), (2, 2)]
-# square/center
-stubborn_positions = [(5, 5), (5, 6), (6, 5), (6, 6)]
-# random 
-stubborn_positions = [(rand(1:10), rand(1:10)) for i in 1:4]
-# corners
-stubborn_positions = [(1, 1), (1, 10), (10, 1), (10, 10)]
-# diagonal
-stubborn_positions = [(1, 1), (4, 4), (7, 7), (10, 10)]
-# distance center
-stubborn_positions = [(3, 3), (3, 7), (7, 3), (7, 7)]
+## 
+baseline = NTuple{2, Int}[]
+line_edge = [(1, 1), (1, 2), (1, 3), (1, 4)]
+line_center = [(5, 3), (5, 4), (5, 5), (5, 6)]
+square_corner = [(1, 1), (1, 2), (2, 1), (2, 2)]
+square_center = [(5, 5), (5, 6), (6, 5), (6, 6)]
+random = [(rand(1:10), rand(1:10)) for i in 1:4]
+corners = [(1, 1), (1, 10), (10, 1), (10, 10)]
+diagonal = [(1, 1), (4, 4), (7, 7), (10, 10)]
+distance_center = [(3, 3), (3, 7), (7, 3), (7, 7)]
 
+##
+stubborn_positions = random
 model = initialize_model((10, 10), stubborn_positions)
 agent_df, _ = Agents.run!(
     model, agent_step!, 1000, adata=[:pos, :culture], 
-    replicates=10, parallel=true, obtainer=deepcopy
+    replicates=100, parallel=true, obtainer=deepcopy
 )
 prepare_data!(agent_df)
-@pipe agent_df |> first(_, 100) |> print
-Feather.write("test.feather", agent_df)
+Feather.write("random.feather", agent_df)
+
+##
