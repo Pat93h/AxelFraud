@@ -46,6 +46,10 @@ distribution_plot <- function(dataset, title, binwidth = 10, color = DEFAULT_COL
         y = "Number of replicates"
       ) +
       theme_axelfraud() +
+      theme(
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12)
+      ) +
       NULL  
   return(p)
 }
@@ -59,15 +63,37 @@ development_plot <- function(dataset, title, alpha = 0.05, size = 2, color = DEF
     summarize(count = n()) %>% 
     ungroup() %>% 
     ggplot(aes(x = step, y = count, color = as.factor(replicate))) +
-    geom_line(alpha = alpha, size = size) +
-    scale_color_manual(values = color_scheme) +
-    labs(
-      title = title,
-      x = "Step",
-      y = "Stubborn culture count"
-    ) +
-    theme(legend.position = "None") +
-    theme_axelfraud() +
-    NULL
+      geom_line(alpha = alpha, size = size) +
+      scale_color_manual(values = color_scheme) +
+      labs(
+        title = title,
+        x = "Step",
+        y = "Stubborn culture count"
+      ) +
+      theme_axelfraud() +
+      theme(
+        legend.position = "None",
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12)
+      ) +
+      NULL
+  return(p)
+}
+
+grid_plot <- function(df, x, y, color, non_stubborn_color = "firebrick", stubborn_color = "gold3") {
+  p <- df %>% 
+    ggplot(aes_string(x = x, y = y, color = color)) +
+      geom_point(size = 6) +
+      scale_color_manual(values = c("0" = non_stubborn_color, "1" = stubborn_color)) +
+      scale_x_continuous(breaks = seq(1, 10, by = 1)) +
+      scale_y_continuous(breaks = seq(1, 10, by = 1)) +
+      coord_fixed() +
+      theme_axelfraud() +
+      theme(
+        legend.position = "None",
+        axis.title = element_blank(),
+        axis.text = element_blank()
+      ) +
+      NULL
   return(p)
 }

@@ -1,12 +1,13 @@
-## 
+## requirements
 using Agents
 using StatsBase
 using DataFrames
 using Feather
 using Query
 using Pipe
+using Random
 
-##
+## model
 mutable struct AxelrodAgent <: Agents.AbstractAgent
     id::Int
     pos::NTuple{2, Int}
@@ -71,39 +72,57 @@ function prepare_data!(dataframe::DataFrames.DataFrame, config_name::String)
     return dataframe
 end
 
-## 
+function run_random(steps::Int, replicates::Int, by::Int=10, rnd_seed::Int=0)
+    Random.seed!(rnd_seed)
+    agent_df_list = DataFrames.DataFrame[]
+    for i in 1:replicates
+        config = [(rand(1:10), rand(1:10)) for i in 1:4]
+        model = initialize_model((10, 10), config)
+        rep_df, _ = Agents.run!(
+            model, agent_step!, steps, adata=[:pos, :culture],
+            replicates=replicates, when=0:by:steps, parallel=true, obtainer=deepcopy
+        )
+        rep_df[!, :replicate] .= i
+        push!(agent_df_list, deepcopy(rep_df))
+    end
+    agent_df = reduce(vcat, agent_df_list)
+    prepare_data!(agent_df, "random")
+    Feather.write(joinpath("data", "random.feather"), agent_df)
+    return agent_df
+end
+
+## configurations
 baseline = NTuple{2, Int}[]
 line_edge = [(1, 1), (1, 2), (1, 3), (1, 4)]
 line_center = [(5, 3), (5, 4), (5, 5), (5, 6)]
 square_corner = [(1, 1), (1, 2), (2, 1), (2, 2)]
 square_center = [(5, 5), (5, 6), (6, 5), (6, 6)]
-random = [(rand(1:10), rand(1:10)) for i in 1:4]
 corners = [(1, 1), (1, 10), (10, 1), (10, 10)]
 diagonal = [(1, 1), (4, 4), (7, 7), (10, 10)]
-distance_center = [(3, 3), (3, 7), (7, 3), (7, 7)]
+distance_center = [(4, 4), (4, 7), (7, 4), (7, 7)]
 config_list = [
-    baseline, line_edge, line_center, square_corner, square_center, 
-    random, corners, diagonal, distance_center
+    baseline, line_edge, line_center, square_corner, 
+    square_center, corners, diagonal, distance_center
 ]
 filename_list = [
-    "baseline", "line_edge", "line_center", "square_corner", "square_center", 
-    "random", "corners", "diagonal", "distance_center"
+    "baseline", "line_edge", "line_center", "square_corner", 
+    "square_center", "corners", "diagonal", "distance_center"
 ]
 
-##
+## simulations
 if !("data" in readdir())
     mkdir("data")
 end
+
+run_random(3000, 300, 10, 0)
+
 for (config, filename) in zip(config_list, filename_list)
     model = initialize_model((10, 10), config)
     agent_df, _ = Agents.run!(
         model, agent_step!, 3000, adata=[:pos, :culture], 
-        replicates=300, 
-        when=0:10:3000, 
-        parallel=true, 
-        obtainer=deepcopy
+        replicates=300, when=0:10:3000, parallel=true, obtainer=deepcopy
     )
-    agent_df = prepare_data!(agent_df)
+    prepare_data!(agent_df, filename)
     Feather.write(joinpath("data", filename * ".feather"), agent_df)
 end
 

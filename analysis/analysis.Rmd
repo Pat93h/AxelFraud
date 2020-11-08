@@ -21,7 +21,7 @@ if (!("figures" %in% list.files()) & SAVE) {dir.create("figures", showWarnings =
 ## Data
 
 ```{r}
-# read datasets ----
+# read simulation datasets ----
 baseline <- load_data(here::here("..", "data", "baseline.feather"))
 corners <- load_data(here::here("..", "data", "corners.feather"))
 diagonal <- load_data(here::here("..", "data", "diagonal.feather"))
@@ -31,6 +31,21 @@ line_edge <- load_data(here::here("..", "data", "line_edge.feather"))
 random <- load_data(here::here("..", "data", "random.feather"))
 square_center <- load_data(here::here("..", "data", "square_center.feather"))
 square_corner <- load_data(here::here("..", "data", "square_corner.feather"))
+
+# read grid outlines ----
+grid_df <- read_delim(here::here("..", "data", "grid_data.csv"), delim = ";") %>% 
+  mutate(
+    x = as.numeric(x),
+    y = as.numeric(y),
+    line_edge = as.factor(line_edge),
+    line_center = as.factor(line_center),
+    square_corner = as.factor(square_corner),
+    square_center = as.factor(square_center),
+    random = as.factor(random),
+    corners = as.factor(corners),
+    diagonal = as.factor(diagonal),
+    distance_center = as.factor(distance_center)
+  )
 ```
 
 
@@ -78,7 +93,7 @@ if(SAVE){ggsave(filename = here::here("figures", "distribution.png"), width = 10
 ```
 
 
-# Development of Cultures
+## Development of Cultures
 
 ```{r}
 # generics ----
@@ -121,6 +136,105 @@ ggarrange(
 # saving ----
 if(SAVE){ggsave(filename = here::here("figures", "development.png"), width = 10, height = 10, dpi = 300)}
 ```
+
+
+```{r}
+# create grid plots ----
+line_edge_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_edge")
+line_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_center")
+square_corner_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "square_corner")
+square_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "square_center")
+random_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "random")
+corners_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "corners")
+diagonal_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "diagonal")
+distance_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "distance_center")
+
+# create development plots ----
+corners_development <- development_plot(
+  dataset = corners, title = element_blank(), alpha = alpha, size = size, color = COLOR
+) 
+diagonal_development <- development_plot(
+  dataset = diagonal, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+distance_center_development <- development_plot(
+  dataset = distance_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+line_center_development <- development_plot(
+  dataset = line_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+line_edge_development <- development_plot(
+  dataset = line_edge, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+random_development <- development_plot(
+  dataset = random, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+square_center_development <- development_plot(
+  dataset = square_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+square_corner_development <- development_plot(
+  dataset = square_corner, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+
+# create distribution plots ----
+corners_distribution <- distribution_plot(
+  dataset = corners, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+diagonal_distribution <- distribution_plot(
+  dataset = diagonal, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+distance_center_distribution <- distribution_plot(
+  dataset = distance_center, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+line_center_distribution <- distribution_plot(
+  dataset = line_center, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+line_edge_distribution <- distribution_plot(
+  dataset = line_edge, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+random_distribution <- distribution_plot(
+  dataset = random, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+square_center_distribution <- distribution_plot(
+  dataset = square_center, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+square_corner_distribution <- distribution_plot(
+  dataset = square_corner, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+
+# arrange and save plots (part 1) ----
+ggarrange(
+  line_edge_grid_plot, line_edge_development, line_edge_distribution,
+  line_center_grid_plot, line_center_development, line_center_distribution,
+  square_corner_grid_plot, square_corner_development, square_corner_distribution,
+  square_center_grid_plot, square_center_development, square_center_distribution,
+  ncol = 3, nrow = 4
+) +
+  theme_axelfraud_arrange(plot_margin = 15)
+
+if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_a.png"), width = 14, height = 14, dpi = 300)}
+
+# arrange and save plots (part 2) ----
+ggarrange(
+  random_grid_plot, random_development, random_distribution,
+  corners_grid_plot, corners_development, corners_distribution,
+  diagonal_grid_plot, diagonal_development, diagonal_distribution,
+  distance_center_grid_plot, distance_center_development, distance_center_distribution,
+  ncol = 3, nrow = 4
+) +
+  theme_axelfraud_arrange(plot_margin = 15)
+
+if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_b.png"), width = 14, height = 14, dpi = 300)}
+
+```
+
+
+
+```{r}
+library(scales)
+show_col(grey_pal(0, 1)(10))
+
+```
+
 
 ```{r, eval=FALSE}
 library(agrmt)
@@ -181,7 +295,7 @@ longterm:
 
 
 
-# Unique Cultures
+## Unique Cultures
 
 ```{r, eval=FALSE}
 color_scheme <- viridis(300, option = "plasma")
