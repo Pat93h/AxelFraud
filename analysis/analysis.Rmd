@@ -376,8 +376,6 @@ shortterm:
   * stubborn threshold value? (at some point -> stubborn culture wins?)
   * fit logistic curve to different replicates -> find turning point
   * activity parameter (comparison with last step)
-  * van der Eijk's A for every step -> plot
-  * correct implementation of random configuration
   * agrmt package -> other measures
 
 longterm:
