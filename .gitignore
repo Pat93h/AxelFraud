@@ -27,6 +27,8 @@ Manifest.toml
 *.feather
 *.7z
 data/
+*.png
+*.pdf
 .Rproj.user
 
 # History files
