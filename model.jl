@@ -137,6 +137,6 @@ for (config, filename) in zip(config_list, filename_list)
     ProgressMeter.next!(p)
 end
 
-run_random(3000, 300, 10, 0, true)
+run_random(steps=3000, replicates=300, by=10, seed=0, write=true)
 
 ##
