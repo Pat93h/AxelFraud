@@ -82,7 +82,7 @@ function run_random(; steps::Int, replicates::Int, by::Int=10, rnd_seed::Int=0, 
         model = initialize_model((10, 10), config)
         rep_df, _ = Agents.run!(
             model, agent_step!, steps, adata=[:pos, :culture],
-            replicates=replicates, when=0:by:steps, parallel=true, obtainer=deepcopy
+            replicates=1, when=0:by:steps, parallel=true, obtainer=deepcopy
         )
         rep_df[!, :replicate] .= i
         push!(agent_df_list, deepcopy(rep_df))
@@ -130,13 +130,13 @@ for (config, filename) in zip(config_list, filename_list)
     model = initialize_model((10, 10), config)
     agent_df, _ = Agents.run!(
         model, agent_step!, 3000, adata=[:pos, :culture], 
-        replicates=300, when=0:10:3000, parallel=true, obtainer=deepcopy
+        replicates=10, when=0:10:3000, parallel=true, obtainer=deepcopy
     )
     prepare_data!(agent_df, filename)
     Feather.write(joinpath("data", filename * ".feather"), agent_df)
     ProgressMeter.next!(p)
 end
 
-run_random(steps=3000, replicates=300, by=10, seed=0, write=true)
+run_random(steps=3000, replicates=10, by=10, rnd_seed=0, write=true)
 
 ##
