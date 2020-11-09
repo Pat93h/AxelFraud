@@ -6,6 +6,7 @@ using Feather
 using Query
 using Pipe
 using Random
+using ProgressMeter
 
 ## model
 mutable struct AxelrodAgent <: Agents.AbstractAgent
@@ -72,11 +73,12 @@ function prepare_data!(dataframe::DataFrames.DataFrame, config_name::String)
     return dataframe
 end
 
-function run_random(steps::Int, replicates::Int, by::Int=10, rnd_seed::Int=0)
+function run_random(; steps::Int, replicates::Int, by::Int=10, rnd_seed::Int=0, write::Bool=false)
     Random.seed!(rnd_seed)
     agent_df_list = DataFrames.DataFrame[]
+    p = ProgressMeter.Progress(replicates, "Running Simulations ...")
     for i in 1:replicates
-        config = [(rand(1:10), rand(1:10)) for i in 1:4]
+        config = [(rand(1:10), rand(1:10)) for j in 1:4]
         model = initialize_model((10, 10), config)
         rep_df, _ = Agents.run!(
             model, agent_step!, steps, adata=[:pos, :culture],
@@ -84,10 +86,13 @@ function run_random(steps::Int, replicates::Int, by::Int=10, rnd_seed::Int=0)
         )
         rep_df[!, :replicate] .= i
         push!(agent_df_list, deepcopy(rep_df))
+        ProgressMeter.next!(p)
     end
     agent_df = reduce(vcat, agent_df_list)
     prepare_data!(agent_df, "random")
-    Feather.write(joinpath("data", "random.feather"), agent_df)
+    if write
+        Feather.write(joinpath("data", "random.feather"), agent_df)
+    end
     return agent_df
 end
 
@@ -110,10 +115,17 @@ filename_list = [
 ]
 
 ## simulations
+Agents.run!(
+    initialize_model((10, 10), baseline), agent_step!, 100, adata=[:pos, :culture],
+    replicates=5, when=0:10:100, parallel=true, obtainer=deepcopy
+)  # index run 1
+run_random(steps=100, replicates=3, by=10, rnd_seed=0, write=false)  # index run 2
+
 if !("data" in readdir())
     mkdir("data")
 end
 
+p = ProgressMeter.Progress(length(config_list), "Running Simulations ...")
 for (config, filename) in zip(config_list, filename_list)
     model = initialize_model((10, 10), config)
     agent_df, _ = Agents.run!(
@@ -122,8 +134,9 @@ for (config, filename) in zip(config_list, filename_list)
     )
     prepare_data!(agent_df, filename)
     Feather.write(joinpath("data", filename * ".feather"), agent_df)
+    ProgressMeter.next!(p)
 end
 
-run_random(3000, 300, 10, 0)
+run_random(3000, 300, 10, 0, true)
 
 ##
