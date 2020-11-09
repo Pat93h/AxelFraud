@@ -114,8 +114,6 @@ if !("data" in readdir())
     mkdir("data")
 end
 
-run_random(3000, 300, 10, 0)
-
 for (config, filename) in zip(config_list, filename_list)
     model = initialize_model((10, 10), config)
     agent_df, _ = Agents.run!(
@@ -125,5 +123,7 @@ for (config, filename) in zip(config_list, filename_list)
     prepare_data!(agent_df, filename)
     Feather.write(joinpath("data", filename * ".feather"), agent_df)
 end
+
+run_random(3000, 300, 10, 0)
 
 ##
