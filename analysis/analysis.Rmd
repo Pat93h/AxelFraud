@@ -139,6 +139,11 @@ if(SAVE){ggsave(filename = here::here("figures", "development.png"), width = 10,
 
 
 ```{r}
+# generics ----
+alpha <- 0.05
+size <- 2
+binwidth <- 1
+
 # create grid plots ----
 line_edge_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_edge")
 line_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_center")
@@ -229,15 +234,33 @@ if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_b.png"), 
 
 
 
-```{r}
+```{r, eval=FALSE}
+# for powerpoint ----
 library(scales)
 show_col(grey_pal(0, 1)(10))
-
 ```
 
 
 ```{r, eval=FALSE}
 library(agrmt)
+
+
+line_edge %>% by_class("line_edge") %>% 
+  rbind(line_center %>% by_class("line_center")) %>% 
+  rbind(square_corner %>% by_class("square_corner")) %>% 
+  rbind(square_center %>% by_class("square_center")) %>% 
+  rbind(random %>% by_class("random")) %>% 
+  rbind(corners %>% by_class("corners")) %>% 
+  rbind(diagonal %>% by_class("diagonal")) %>% 
+  rbind(distance_center %>% by_class("distance_center")) -> tmp
+
+distance_center %>% by_class("line_edge")
+
+
+tmp %>% 
+  group_by(config) %>% 
+  summarize(agreement = agreement(count, ))
+
 
 random %>% 
   filter(step == max(step)) %>% 
@@ -250,6 +273,9 @@ random %>%
   summarize(count = n()) %>% 
   ungroup() %>% 
   mutate(count = as.numeric(count)) -> tmp
+
+tmp %>% 
+  summarize(agreement = agreement(count))
 
 agreement(tmp$count)
 polarization(tmp$count)

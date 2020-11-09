@@ -97,3 +97,22 @@ grid_plot <- function(df, x, y, color, non_stubborn_color = "firebrick", stubbor
       NULL
   return(p)
 }
+
+by_class <- function(df, config_name) {
+  df_classed <- df
+  df_classed$replicate %<>% factor(levels = seq(1, 300, by = 1))
+  df_classed  %<>% 
+    filter(step == max(step)) %>% 
+    filter(culture == "00000") %>% 
+    group_by(replicate, .drop = FALSE) %>% 
+    summarize(stubborn_culture_count = n()) %>% 
+    ungroup() %>% 
+    mutate(stubborn_culture_grouped = ceiling(stubborn_culture_count / 10)) %>% 
+    mutate(stubborn_culture_grouped = stubborn_culture_grouped %>% factor(levels = seq(1, 10, by = 1))) %>% 
+    group_by(stubborn_culture_grouped, .drop = FALSE) %>% 
+    summarize(count = n()) %>% 
+    ungroup() %>% 
+    mutate(count = as.numeric(count)) %>% 
+    mutate(config = config_name)
+  return(df_classed)
+}
