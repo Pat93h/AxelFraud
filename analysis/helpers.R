@@ -116,3 +116,21 @@ by_class <- function(df, config_name) {
     mutate(config = config_name)
   return(df_classed)
 }
+
+agreement_by_step <- function(df) {
+  df %>% 
+    filter(culture == "00000") %>% 
+    group_by(step, replicate, culture) %>% 
+    summarize(count = n()) %>% 
+    ungroup() %>% 
+    mutate(count = as.numeric(count)) %>% 
+    mutate(count_grouped = ceiling(count / 10)) %>% 
+    mutate(count_grouped = count_grouped %>% factor(levels = seq(1, 10, by = 1))) %>% 
+    group_by(step, count_grouped, .drop = FALSE) %>% 
+    summarize(count = n()) %>% 
+    ungroup() %>% 
+    group_by(step, .drop = FALSE) %>% 
+    summarize(agreement = agreement(count)) %>% 
+    ungroup() -> df_agreement_by_step
+  return(df_agreement_by_step)
+}

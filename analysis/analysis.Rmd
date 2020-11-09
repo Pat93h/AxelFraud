@@ -12,6 +12,7 @@ library(arrow)
 library(here)
 library(magrittr)
 library(ggpubr)
+library(agrmt)
 source("helpers.R")
 SAVE <- TRUE  # set TRUE if you want to save the plots
 COLOR <- "firebrick"
@@ -242,9 +243,6 @@ show_col(grey_pal(0, 1)(10))
 
 
 ```{r, eval=FALSE}
-library(agrmt)
-
-
 line_edge %>% by_class("line_edge") %>% 
   rbind(line_center %>% by_class("line_center")) %>% 
   rbind(square_corner %>% by_class("square_corner")) %>% 
@@ -254,47 +252,117 @@ line_edge %>% by_class("line_edge") %>%
   rbind(diagonal %>% by_class("diagonal")) %>% 
   rbind(distance_center %>% by_class("distance_center")) -> tmp
 
-distance_center %>% by_class("line_edge")
-
-
 tmp %>% 
   group_by(config) %>% 
-  summarize(agreement = agreement(count, ))
+  summarize(
+    agreement = agreement(count),
+    polarization = polarization(count),
+    consensus = consensus(count),
+    BerryMielke = BerryMielke(count),
+    BlairLacy = BlairLacy(count)
+  ) %>% 
+  ungroup()
 
+```
 
-random %>% 
-  filter(step == max(step)) %>% 
-  filter(culture == "00000") %>% 
-  group_by(replicate) %>% 
-  summarize(stubborn_culture_count = n()) %>% 
-  ungroup() %>% 
-  mutate(stubborn_culture_grouped = ceiling(stubborn_culture_count / 10)) %>% 
-  group_by(stubborn_culture_grouped) %>% 
-  summarize(count = n()) %>% 
-  ungroup() %>% 
-  mutate(count = as.numeric(count)) -> tmp
+```{r}
+# compute agreements over time ----
+square_corner %>% agreement_by_step() -> square_corner_agreement
+square_center %>% agreement_by_step() -> square_center_agreement
+corners %>% agreement_by_step() -> corners_agreement
+line_edge %>% agreement_by_step() -> line_edge_agreement
+line_center %>% agreement_by_step() -> line_center_agreement
+diagonal %>% agreement_by_step() -> diagonal_agreement
+distance_center %>% agreement_by_step() -> distance_center_agreement
+random %>% agreement_by_step() -> random_agreement
 
-tmp %>% 
-  summarize(agreement = agreement(count))
+# plotting ----
+square_corner_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Square corner", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> square_corner_agreement_plot
 
-agreement(tmp$count)
-polarization(tmp$count)
-consensus(tmp$count)
-consensus.variance(tmp$count)
-concentration(tmp$count)
-BerryMielke(tmp$count)
-BlairLacy(tmp$count)
-lsquared(tmp$count)
-lsquared.variance(tmp$count)
-l.variance(tmp$count)
-dispersion(tmp$count)
-Reardon(tmp$count)
-entropy(tmp$count)
-Leik(tmp$count)
-ajus(tmp$count)
-ajusPlot(tmp$count)
+square_center_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Square center", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> square_center_agreement_plot
 
+corners_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Corners", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> corners_agreement_plot
 
+line_edge_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Line edge", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> line_edge_agreement_plot
+
+line_center_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Line center", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> line_center_agreement_plot
+
+diagonal_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Diagonal", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> diagonal_agreement_plot
+
+distance_center_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Distance center", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> distance_center_agreement_plot
+
+random_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Random", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> random_agreement_plot
+
+# arrange plots and save ----
+ggarrange(
+  random_agreement_plot, distance_center_agreement_plot, diagonal_agreement_plot, line_edge_agreement_plot, 
+  ncol = 1, nrow = 4
+)
+
+if(SAVE){ggsave(filename = here::here("figures", "agreement_over_time_a.png"), width = 7, height = 10, dpi = 300)}
+
+ggarrange(
+  line_center_agreement_plot, square_corner_agreement_plot, square_center_agreement_plot, corners_agreement_plot,
+  ncol = 1, nrow = 4
+)
+
+if(SAVE){ggsave(filename = here::here("figures", "agreement_over_time_b.png"), width = 7, height = 10, dpi = 300)}
 ```
 
 
