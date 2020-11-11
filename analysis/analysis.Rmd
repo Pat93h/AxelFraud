@@ -239,6 +239,7 @@ if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_b.png"), 
 # for powerpoint ----
 library(scales)
 show_col(grey_pal(0, 1)(10))
+grDevices::col2rgb("grey40")
 ```
 
 
