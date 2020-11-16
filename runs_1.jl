@@ -5,6 +5,7 @@ include(joinpath("src", "module.jl"))
 begin
     BATCH_NAME = "original"
     GRID_DIMS = (10, 10)
+    STUBBORN_COUNT = 4
     STEPS = 100
     REPLICATES = 2
     WHEN = 10
@@ -28,6 +29,12 @@ begin
         "baseline", "line_edge", "line_center", "square_corner", 
         "square_center", "corners", "diagonal", "distance_center"
     ]
+    AxelFraud.create_config_table(
+        config_list=config_list, 
+        grid_dims=GRID_DIMS, 
+        batch_name=BATCH_NAME,
+        write=WRITE
+    )
 end
 
 begin
@@ -51,6 +58,7 @@ random_agent_df, random_configs = AxelFraud.run_random(
     config_name="random",
     batch_name=BATCH_NAME,
     grid_dims=GRID_DIMS,
+    stubborn_count=STUBBORN_COUNT,
     steps=STEPS, 
     replicates=REPLICATES, 
     when=WHEN, 

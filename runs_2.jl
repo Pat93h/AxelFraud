@@ -21,6 +21,7 @@ AxelFraud.run_batch(
 AxelFraud.run_random(
     batch_name="random",
     grid_dims=(10, 10),
+    stubborn_count=10,
     steps=100, 
     replicates=2, 
     when=10, 
