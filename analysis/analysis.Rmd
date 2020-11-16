@@ -385,6 +385,7 @@ longterm:
   * other network types
   * informed agents
   * interval scale for cultures
+  * neighbor count of stubborn agents (random -> expected value / combinatorics)
 
 
 
