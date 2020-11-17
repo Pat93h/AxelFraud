@@ -23,9 +23,12 @@ if (!("figures" %in% list.files()) & SAVE) {dir.create("figures", showWarnings =
 ## Data
 
 ```{r}
+batchruns <- character()
 for (filename in list.files(here::here("..", "data", BATCH_NAME))) {
   varname <- stringr::str_remove(filename, ".feather")
+  
   if (!grepl("configs", varname)) {
+    batchruns <- append(batchruns, varname)
     assign(varname, arrow::read_feather(here::here("..", "data", BATCH_NAME, filename))) 
     assign(varname, format_data(eval(as.symbol(varname))))
   }  
@@ -45,35 +48,18 @@ arrow::read_feather(here::here("..", "data", BATCH_NAME, "configs.feather")) %>%
 binwidth <- 1
 
 # plotting ----
-corners_distribution <- distribution_plot(
-  dataset = corners, title = "Corners", binwidth = binwidth, color = COLOR
-)
-diagonal_distribution <- distribution_plot(
-  dataset = diagonal, title = "Diagonal", binwidth = binwidth, color = COLOR
-)
-distance_center_distribution <- distribution_plot(
-  dataset = distance_center, title = "Distance center", binwidth = binwidth, color = COLOR
-)
-line_center_distribution <- distribution_plot(
-  dataset = line_center, title = "Line center", binwidth = binwidth, color = COLOR
-)
-line_edge_distribution <- distribution_plot(
-  dataset = line_edge, title = "Line edge", binwidth = binwidth, color = COLOR
-)
-random_distribution <- distribution_plot(
-  dataset = random, title = "Random", binwidth = binwidth, color = COLOR
-)
-square_center_distribution <- distribution_plot(
-  dataset = square_center, title = "Square center", binwidth = binwidth, color = COLOR
-)
-square_corner_distribution <- distribution_plot(
-  dataset = square_corner, title = "Square corner", binwidth = binwidth, color = COLOR
-)
+
+distribution_plots <- list()
+
+for (i in 1:length(batchruns)) {
+  distribution_plots[[i]] <- distribution_plot(
+  dataset = get(batchruns[i]), title = batchruns[i], binwidth = binwidth, color = COLOR
+  )
+}
 
 ggarrange(
-  corners_distribution, diagonal_distribution, distance_center_distribution, line_center_distribution, 
-  line_edge_distribution, random_distribution, square_center_distribution, square_corner_distribution,
-  ncol = 2, nrow = 4
+  plotlist = distribution_plots,
+  ncol = ceiling(sqrt(length(batchruns))), nrow = floor(sqrt(length(batchruns)))
 ) +
   theme_axelfraud_arrange()
 
@@ -90,35 +76,19 @@ alpha <- 0.05
 size <- 2
 
 # plotting ----
-corners_development <- development_plot(
-  dataset = corners, title = "Corners", alpha = alpha, size = size, color = COLOR
-)
-diagonal_development <- development_plot(
-  dataset = diagonal, title ="Diagonal", alpha = alpha, size = size, color = COLOR
-)
-distance_center_development <- development_plot(
-  dataset = distance_center, title = "Distance center", alpha = alpha, size = size, color = COLOR
-)
-line_center_development <- development_plot(
-  dataset = line_center, title = "Line center", alpha = alpha, size = size, color = COLOR
-)
-line_edge_development <- development_plot(
-  dataset = line_edge, title = "Line edge", alpha = alpha, size = size, color = COLOR
-)
-random_development <- development_plot(
-  dataset = random, title = "Random", alpha = alpha, size = size, color = COLOR
-)
-square_center_development <- development_plot(
-  dataset = square_center, title = "Square center", alpha = alpha, size = size, color = COLOR
-)
-square_corner_development <- development_plot(
-  dataset = square_corner, title = "Square corner", alpha = alpha, size = size, color = COLOR
-)
+
+development_plots <- list()
+
+for (i in 1:length(batchruns)) {
+  development_plots[[i]] <- development_plot(
+  dataset = get(batchruns[i]), title = batchruns[i], alpha = alpha, size = size, color = COLOR
+  )
+}
+
 
 ggarrange(
-  corners_development, diagonal_development, distance_center_development, line_center_development,
-  line_edge_development, random_development, square_center_development, square_corner_development,
-  ncol = 2, nrow = 4
+  plotlist = development_plots,
+  ncol = ceiling(sqrt(length(batchruns))), nrow = floor(sqrt(length(batchruns)))
 ) +
   theme_axelfraud_arrange()
 
