@@ -56,7 +56,7 @@ distribution_plot <- function(dataset, title, binwidth = 10, color = DEFAULT_COL
 }
 
 development_plot <- function(dataset, title, alpha = 0.05, size = 2, color = DEFAULT_COLOR) {
-  n_replicates <- dim(corners %>% select(replicate) %>% unique())[1]
+  n_replicates <- dim(dataset %>% select(replicate) %>% unique())[1]
   color_scheme <- rep(color, n_replicates)
   p <- dataset %>% 
     filter(culture == "00000") %>% 
