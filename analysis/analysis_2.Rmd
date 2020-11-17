@@ -31,7 +31,9 @@ for (filename in list.files(here::here("..", "data", BATCH_NAME))) {
   }  
 }
 
-arrow::read_feather(here::here("..", "data", BATCH_NAME, "configs.feather"))
+arrow::read_feather(here::here("..", "data", BATCH_NAME, "configs.feather")) %>% 
+  sapply(as.numeric) %>% 
+  as_tibble() -> config
 
 ```
 
