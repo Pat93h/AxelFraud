@@ -38,6 +38,9 @@ arrow::read_feather(here::here("..", "data", BATCH_NAME, "configs.feather")) %>%
   sapply(as.numeric) %>% 
   as_tibble() -> config
 
+
+config[,-(1:2)] %<>% map_df(as.factor)
+
 ```
 
 
@@ -103,92 +106,26 @@ alpha <- 0.05
 size <- 2
 binwidth <- 1
 
-# create grid plots ----
-line_edge_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_edge")
-line_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_center")
-square_corner_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "square_corner")
-square_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "square_center")
-random_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "random")
-corners_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "corners")
-diagonal_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "diagonal")
-distance_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "distance_center")
+# create grid plots and list of all plots in correct order ----
+all_plots <- list()
 
-# create development plots ----
-corners_development <- development_plot(
-  dataset = corners, title = element_blank(), alpha = alpha, size = size, color = COLOR
-) 
-diagonal_development <- development_plot(
-  dataset = diagonal, title = element_blank(), alpha = alpha, size = size, color = COLOR
-)
-distance_center_development <- development_plot(
-  dataset = distance_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
-)
-line_center_development <- development_plot(
-  dataset = line_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
-)
-line_edge_development <- development_plot(
-  dataset = line_edge, title = element_blank(), alpha = alpha, size = size, color = COLOR
-)
-random_development <- development_plot(
-  dataset = random, title = element_blank(), alpha = alpha, size = size, color = COLOR
-)
-square_center_development <- development_plot(
-  dataset = square_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
-)
-square_corner_development <- development_plot(
-  dataset = square_corner, title = element_blank(), alpha = alpha, size = size, color = COLOR
-)
+for (i in 1:length(batchruns)) {
+  grid_plots[[i]] <- config %>% grid_plot(x = "x", y = "y", color = batchruns[i])
+  
+  all_plots[[length(all_plots) + 1]] <- grid_plots[[i]]
+  all_plots[[length(all_plots) + 1]] <- development_plots[[i]]
+  all_plots[[length(all_plots) + 1]] <- distribution_plots[[i]]
+}
 
-# create distribution plots ----
-corners_distribution <- distribution_plot(
-  dataset = corners, title = element_blank(), binwidth = binwidth, color = COLOR
-)
-diagonal_distribution <- distribution_plot(
-  dataset = diagonal, title = element_blank(), binwidth = binwidth, color = COLOR
-)
-distance_center_distribution <- distribution_plot(
-  dataset = distance_center, title = element_blank(), binwidth = binwidth, color = COLOR
-)
-line_center_distribution <- distribution_plot(
-  dataset = line_center, title = element_blank(), binwidth = binwidth, color = COLOR
-)
-line_edge_distribution <- distribution_plot(
-  dataset = line_edge, title = element_blank(), binwidth = binwidth, color = COLOR
-)
-random_distribution <- distribution_plot(
-  dataset = random, title = element_blank(), binwidth = binwidth, color = COLOR
-)
-square_center_distribution <- distribution_plot(
-  dataset = square_center, title = element_blank(), binwidth = binwidth, color = COLOR
-)
-square_corner_distribution <- distribution_plot(
-  dataset = square_corner, title = element_blank(), binwidth = binwidth, color = COLOR
-)
 
-# arrange and save plots (part 1) ----
+# arrange and save plots ----
 ggarrange(
-  line_edge_grid_plot, line_edge_development, line_edge_distribution,
-  line_center_grid_plot, line_center_development, line_center_distribution,
-  square_corner_grid_plot, square_corner_development, square_corner_distribution,
-  square_center_grid_plot, square_center_development, square_center_distribution,
-  ncol = 3, nrow = 4
+  plotlist = all_plots,
+  ncol = 3, nrow = 5
 ) +
   theme_axelfraud_arrange(plot_margin = 15)
 
 if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_a.png"), width = 14, height = 14, dpi = 300)}
-
-# arrange and save plots (part 2) ----
-ggarrange(
-  random_grid_plot, random_development, random_distribution,
-  corners_grid_plot, corners_development, corners_distribution,
-  diagonal_grid_plot, diagonal_development, diagonal_distribution,
-  distance_center_grid_plot, distance_center_development, distance_center_distribution,
-  ncol = 3, nrow = 4
-) +
-  theme_axelfraud_arrange(plot_margin = 15)
-
-if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_b.png"), width = 14, height = 14, dpi = 300)}
-
 ```
 
 
