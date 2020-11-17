@@ -20,14 +20,15 @@ theme_axelfraud_arrange <- function(plot_margin = 15) {
   )
 }
 
-load_data <- function(file_path) {
-  data <- arrow::read_feather(file_path)
+format_data <- function(data) {
   data$step %<>% as.numeric()
   data$id %<>% as.numeric()
   data$culture %<>% as.character()
+  data$changed_culture %<>% as.logical()
   data$replicate %<>% as.numeric()
   data$x %<>% as.numeric()
-  data$y %<>% as.numeric()  
+  data$y %<>% as.numeric()
+  data$config %<>% as.character()
   return(data)
 }
 

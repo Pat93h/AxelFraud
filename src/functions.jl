@@ -3,6 +3,7 @@ mutable struct AxelrodAgent <: Agents.AbstractAgent
     pos::NTuple{2, Int}
     stubborn::Bool
     culture::AbstractArray
+    changed_culture::Bool
 end
 
 function initialize_model(dims::NTuple{2, Int}, stubborn_positions::AbstractArray)
@@ -16,7 +17,7 @@ end
 function populate!(model::Agents.AgentBasedModel, dims::NTuple{2, Int})
     positions = [(i, j) for i in 1:dims[1] for j in 1:dims[2]]
     for (id, pos) in enumerate(positions)
-        Agents.add_agent_pos!(AxelrodAgent(id, pos, false, rand(0:9, 5)), model)
+        Agents.add_agent_pos!(AxelrodAgent(id, pos, false, rand(0:9, 5), 0), model)
     end
     return model
 end
@@ -39,6 +40,9 @@ function agent_step!(agent::Agents.AbstractAgent, model::Agents.AgentBasedModel)
     similarity = StatsBase.mean(agent.culture .== interaction_partner.culture)
     if !(similarity == 1.0) & !agent.stubborn & (rand() <= similarity)
         assimilate!(agent, interaction_partner)
+        agent.changed_culture = 1
+    else
+        agent.changed_culture = 0
     end
     return agent
 end
@@ -66,6 +70,7 @@ function run_random(;
     config_name::Union{String, Nothing}=nothing,
     batch_name::String,
     grid_dims::Tuple,
+    stubborn_count::Int,
     steps::Int, 
     replicates::Int, 
     when::Int=10, 
@@ -83,11 +88,11 @@ function run_random(;
     config_list = Any[]
     p = ProgressMeter.Progress(replicates, "Running Simulations ...")
     for i in 1:replicates
-        config = [(rand(1:grid_dims[1]), rand(1:grid_dims[2])) for j in 1:4]
+        config = [(rand(1:grid_dims[1]), rand(1:grid_dims[2])) for j in 1:stubborn_count]
         push!(config_list, deepcopy(config))
         model = initialize_model(grid_dims, config)
         rep_df, _ = Agents.run!(
-            model, agent_step!, steps, adata=[:pos, :culture],
+            model, agent_step!, steps, adata=[:pos, :culture, :changed_culture],
             replicates=1, when=0:when:steps, parallel=true, obtainer=deepcopy
         )
         rep_df[!, :replicate] .= i
@@ -177,7 +182,7 @@ function run_config(;
     end
     model = initialize_model(grid_dims, stubborn_positions)
     agent_df, _ = Agents.run!(
-        model, agent_step!, steps, adata=[:pos, :culture],
+        model, agent_step!, steps, adata=[:pos, :culture, :changed_culture],
         replicates=replicates, when=0:when:steps, parallel=true, obtainer=deepcopy
     )
     prepare_data!(agent_df, config_name)

@@ -1,0 +1,431 @@
+---
+title: "Analysis 2"
+author: "Johannes Nakayama"
+date: "16 11 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(arrow)
+library(here)
+library(magrittr)
+library(ggpubr)
+library(agrmt)
+source("helpers.R")
+SAVE <- TRUE  # set TRUE if you want to save the plots
+COLOR <- "firebrick"
+BATCH_NAME <- "expanding_square"
+if (!("figures" %in% list.files()) & SAVE) {dir.create("figures", showWarnings = FALSE)}
+```
+
+## Data
+
+```{r}
+for (filename in list.files(here::here("..", "data", BATCH_NAME))) {
+  varname <- stringr::str_remove(filename, ".feather")
+  if (!grepl("configs", varname)) {
+    assign(varname, arrow::read_feather(here::here("..", "data", BATCH_NAME, filename))) 
+    assign(varname, format_data(eval(as.symbol(varname))))
+  }  
+}
+
+arrow::read_feather(here::here("..", "data", BATCH_NAME, "configs.feather")) %>% 
+  sapply(as.numeric) %>% 
+  as_tibble() -> config
+
+```
+
+
+## Distribution
+
+```{r}
+# generics ----
+binwidth <- 1
+
+# plotting ----
+corners_distribution <- distribution_plot(
+  dataset = corners, title = "Corners", binwidth = binwidth, color = COLOR
+)
+diagonal_distribution <- distribution_plot(
+  dataset = diagonal, title = "Diagonal", binwidth = binwidth, color = COLOR
+)
+distance_center_distribution <- distribution_plot(
+  dataset = distance_center, title = "Distance center", binwidth = binwidth, color = COLOR
+)
+line_center_distribution <- distribution_plot(
+  dataset = line_center, title = "Line center", binwidth = binwidth, color = COLOR
+)
+line_edge_distribution <- distribution_plot(
+  dataset = line_edge, title = "Line edge", binwidth = binwidth, color = COLOR
+)
+random_distribution <- distribution_plot(
+  dataset = random, title = "Random", binwidth = binwidth, color = COLOR
+)
+square_center_distribution <- distribution_plot(
+  dataset = square_center, title = "Square center", binwidth = binwidth, color = COLOR
+)
+square_corner_distribution <- distribution_plot(
+  dataset = square_corner, title = "Square corner", binwidth = binwidth, color = COLOR
+)
+
+ggarrange(
+  corners_distribution, diagonal_distribution, distance_center_distribution, line_center_distribution, 
+  line_edge_distribution, random_distribution, square_center_distribution, square_corner_distribution,
+  ncol = 2, nrow = 4
+) +
+  theme_axelfraud_arrange()
+
+# saving ----
+if(SAVE){ggsave(filename = here::here("figures", "distribution.png"), width = 10, height = 10, dpi = 300)}
+```
+
+
+## Development of Cultures
+
+```{r}
+# generics ----
+alpha <- 0.05
+size <- 2
+
+# plotting ----
+corners_development <- development_plot(
+  dataset = corners, title = "Corners", alpha = alpha, size = size, color = COLOR
+)
+diagonal_development <- development_plot(
+  dataset = diagonal, title ="Diagonal", alpha = alpha, size = size, color = COLOR
+)
+distance_center_development <- development_plot(
+  dataset = distance_center, title = "Distance center", alpha = alpha, size = size, color = COLOR
+)
+line_center_development <- development_plot(
+  dataset = line_center, title = "Line center", alpha = alpha, size = size, color = COLOR
+)
+line_edge_development <- development_plot(
+  dataset = line_edge, title = "Line edge", alpha = alpha, size = size, color = COLOR
+)
+random_development <- development_plot(
+  dataset = random, title = "Random", alpha = alpha, size = size, color = COLOR
+)
+square_center_development <- development_plot(
+  dataset = square_center, title = "Square center", alpha = alpha, size = size, color = COLOR
+)
+square_corner_development <- development_plot(
+  dataset = square_corner, title = "Square corner", alpha = alpha, size = size, color = COLOR
+)
+
+ggarrange(
+  corners_development, diagonal_development, distance_center_development, line_center_development,
+  line_edge_development, random_development, square_center_development, square_corner_development,
+  ncol = 2, nrow = 4
+) +
+  theme_axelfraud_arrange()
+
+# saving ----
+if(SAVE){ggsave(filename = here::here("figures", "development.png"), width = 10, height = 10, dpi = 300)}
+```
+
+
+```{r}
+# generics ----
+alpha <- 0.05
+size <- 2
+binwidth <- 1
+
+# create grid plots ----
+line_edge_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_edge")
+line_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "line_center")
+square_corner_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "square_corner")
+square_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "square_center")
+random_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "random")
+corners_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "corners")
+diagonal_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "diagonal")
+distance_center_grid_plot <- grid_df %>% grid_plot(x = "x", y = "y", color = "distance_center")
+
+# create development plots ----
+corners_development <- development_plot(
+  dataset = corners, title = element_blank(), alpha = alpha, size = size, color = COLOR
+) 
+diagonal_development <- development_plot(
+  dataset = diagonal, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+distance_center_development <- development_plot(
+  dataset = distance_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+line_center_development <- development_plot(
+  dataset = line_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+line_edge_development <- development_plot(
+  dataset = line_edge, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+random_development <- development_plot(
+  dataset = random, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+square_center_development <- development_plot(
+  dataset = square_center, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+square_corner_development <- development_plot(
+  dataset = square_corner, title = element_blank(), alpha = alpha, size = size, color = COLOR
+)
+
+# create distribution plots ----
+corners_distribution <- distribution_plot(
+  dataset = corners, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+diagonal_distribution <- distribution_plot(
+  dataset = diagonal, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+distance_center_distribution <- distribution_plot(
+  dataset = distance_center, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+line_center_distribution <- distribution_plot(
+  dataset = line_center, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+line_edge_distribution <- distribution_plot(
+  dataset = line_edge, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+random_distribution <- distribution_plot(
+  dataset = random, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+square_center_distribution <- distribution_plot(
+  dataset = square_center, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+square_corner_distribution <- distribution_plot(
+  dataset = square_corner, title = element_blank(), binwidth = binwidth, color = COLOR
+)
+
+# arrange and save plots (part 1) ----
+ggarrange(
+  line_edge_grid_plot, line_edge_development, line_edge_distribution,
+  line_center_grid_plot, line_center_development, line_center_distribution,
+  square_corner_grid_plot, square_corner_development, square_corner_distribution,
+  square_center_grid_plot, square_center_development, square_center_distribution,
+  ncol = 3, nrow = 4
+) +
+  theme_axelfraud_arrange(plot_margin = 15)
+
+if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_a.png"), width = 14, height = 14, dpi = 300)}
+
+# arrange and save plots (part 2) ----
+ggarrange(
+  random_grid_plot, random_development, random_distribution,
+  corners_grid_plot, corners_development, corners_distribution,
+  diagonal_grid_plot, diagonal_development, diagonal_distribution,
+  distance_center_grid_plot, distance_center_development, distance_center_distribution,
+  ncol = 3, nrow = 4
+) +
+  theme_axelfraud_arrange(plot_margin = 15)
+
+if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_b.png"), width = 14, height = 14, dpi = 300)}
+
+```
+
+
+
+```{r, eval=FALSE}
+# for powerpoint ----
+library(scales)
+show_col(grey_pal(0, 1)(10))
+grDevices::col2rgb("grey40")
+```
+
+
+```{r, eval=FALSE}
+line_edge %>% by_class("line_edge") %>% 
+  rbind(line_center %>% by_class("line_center")) %>% 
+  rbind(square_corner %>% by_class("square_corner")) %>% 
+  rbind(square_center %>% by_class("square_center")) %>% 
+  rbind(random %>% by_class("random")) %>% 
+  rbind(corners %>% by_class("corners")) %>% 
+  rbind(diagonal %>% by_class("diagonal")) %>% 
+  rbind(distance_center %>% by_class("distance_center")) -> tmp
+
+tmp %>% 
+  group_by(config) %>% 
+  summarize(
+    agreement = agreement(count),
+    polarization = polarization(count),
+    consensus = consensus(count),
+    BerryMielke = BerryMielke(count),
+    BlairLacy = BlairLacy(count)
+  ) %>% 
+  ungroup()
+
+```
+
+```{r}
+# compute agreements over time ----
+square_corner %>% agreement_by_step() -> square_corner_agreement
+square_center %>% agreement_by_step() -> square_center_agreement
+corners %>% agreement_by_step() -> corners_agreement
+line_edge %>% agreement_by_step() -> line_edge_agreement
+line_center %>% agreement_by_step() -> line_center_agreement
+diagonal %>% agreement_by_step() -> diagonal_agreement
+distance_center %>% agreement_by_step() -> distance_center_agreement
+random %>% agreement_by_step() -> random_agreement
+
+# plotting ----
+square_corner_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Square corner", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> square_corner_agreement_plot
+
+square_center_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Square center", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> square_center_agreement_plot
+
+corners_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Corners", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> corners_agreement_plot
+
+line_edge_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Line edge", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> line_edge_agreement_plot
+
+line_center_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Line center", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> line_center_agreement_plot
+
+diagonal_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Diagonal", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> diagonal_agreement_plot
+
+distance_center_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Distance center", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> distance_center_agreement_plot
+
+random_agreement %>% 
+  ggplot(aes(x = step, y = agreement)) +
+    geom_hline(yintercept = 0, size = 1.5, color = "grey40") +
+    geom_line(size = 2, alpha = 0.7, color = COLOR) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    labs(title = "Random", x = "Step", y = "Agreement") +
+    theme_axelfraud() +
+    theme(axis.title = element_text(size = 12)) -> random_agreement_plot
+
+# arrange plots and save ----
+ggarrange(
+  random_agreement_plot, distance_center_agreement_plot, diagonal_agreement_plot, line_edge_agreement_plot, 
+  ncol = 1, nrow = 4
+)
+
+if(SAVE){ggsave(filename = here::here("figures", "agreement_over_time_a.png"), width = 7, height = 10, dpi = 300)}
+
+ggarrange(
+  line_center_agreement_plot, square_corner_agreement_plot, square_center_agreement_plot, corners_agreement_plot,
+  ncol = 1, nrow = 4
+)
+
+if(SAVE){ggsave(filename = here::here("figures", "agreement_over_time_b.png"), width = 7, height = 10, dpi = 300)}
+```
+
+
+
+# Measurements
+
+shortterm:
+
+  * van der Eijk's A (measurement of agreement)
+  * refer to https://en.wikipedia.org/wiki/Multimodal_distribution for other measurements  
+  * stubborn threshold value? (at some point -> stubborn culture wins?)
+  * fit logistic curve to different replicates -> find turning point
+  * activity parameter (comparison with last step)
+  * agrmt package -> other measures
+
+longterm:
+  
+  * manipulate stubborn count
+  * other network types
+  * informed agents
+  * interval scale for cultures
+  * neighbor count of stubborn agents (random -> expected value / combinatorics)
+
+
+
+## Unique Cultures
+
+```{r, eval=FALSE}
+color_scheme <- viridis(300, option = "plasma")
+color_scheme2 <- rep(COLOR, 300)
+
+data %>% 
+  group_by(step, replicate, culture) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  group_by(step, replicate) %>% 
+  summarize(unique_cultures = n()) %>% 
+  ungroup() -> tmp
+
+tmp %>% 
+  ggplot(aes(x = step, y = unique_cultures, color = as.factor(replicate))) +
+  geom_line(alpha = 0.05, size = 2) +
+  scale_color_manual(values = color_scheme2) +
+  labs(
+    title = "Development of unique culture count",
+    x = "Step",
+    y = "Unique cultures"
+  ) +
+  theme(legend.position = "None") +
+  theme_axelfraud()
+
+if(SAVE){ggsave(filename = "unique_cultures.png", width = 10, height = 4, dpi = 300)}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
