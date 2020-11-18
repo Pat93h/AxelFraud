@@ -108,6 +108,7 @@ binwidth <- 1
 
 # create grid plots and list of all plots in correct order ----
 all_plots <- list()
+grid_plots <- list()
 
 for (i in 1:length(batchruns)) {
   grid_plots[[i]] <- config %>% grid_plot(x = "x", y = "y", color = batchruns[i])
