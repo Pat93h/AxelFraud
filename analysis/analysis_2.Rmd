@@ -17,6 +17,13 @@ source("helpers.R")
 SAVE <- TRUE  # set TRUE if you want to save the plots
 COLOR <- "firebrick"
 BATCH_NAME <- "expanding_square"
+PLOT_TITLE <- c(
+  "Expanding square 1", 
+  "Expanding square 2", 
+  "Expanding square 3", 
+  "Expanding square 4", 
+  "Expanding square 5"
+)
 if (!("figures" %in% list.files()) & SAVE) {dir.create("figures", showWarnings = FALSE)}
 ```
 
@@ -26,21 +33,17 @@ if (!("figures" %in% list.files()) & SAVE) {dir.create("figures", showWarnings =
 batchruns <- character()
 for (filename in list.files(here::here("..", "data", BATCH_NAME))) {
   varname <- stringr::str_remove(filename, ".feather")
-  
   if (!grepl("configs", varname)) {
     batchruns <- append(batchruns, varname)
     assign(varname, arrow::read_feather(here::here("..", "data", BATCH_NAME, filename))) 
-    assign(varname, format_data(eval(as.symbol(varname))))
+    assign(varname, format_data(get(varname)))
   }  
 }
 
 arrow::read_feather(here::here("..", "data", BATCH_NAME, "configs.feather")) %>% 
   sapply(as.numeric) %>% 
   as_tibble() -> config
-
-
 config[,-(1:2)] %<>% map_df(as.factor)
-
 ```
 
 
@@ -49,25 +52,26 @@ config[,-(1:2)] %<>% map_df(as.factor)
 ```{r}
 # generics ----
 binwidth <- 1
+y_breaks <- 20
+ylim <- c(0, 60)
 
 # plotting ----
-
 distribution_plots <- list()
-
 for (i in 1:length(batchruns)) {
   distribution_plots[[i]] <- distribution_plot(
-  dataset = get(batchruns[i]), title = batchruns[i], binwidth = binwidth, color = COLOR
+    dataset = get(batchruns[i]), 
+    title = PLOT_TITLE[i], 
+    binwidth = binwidth, 
+    color = COLOR,
+    y_breaks = y_breaks,
+    ylim = ylim
   )
 }
-
-ggarrange(
-  plotlist = distribution_plots,
-  ncol = ceiling(sqrt(length(batchruns))), nrow = floor(sqrt(length(batchruns)))
-) +
+ggarrange(plotlist = distribution_plots, ncol = 1) +
   theme_axelfraud_arrange()
 
 # saving ----
-if(SAVE){ggsave(filename = here::here("figures", "distribution.png"), width = 10, height = 10, dpi = 300)}
+if(SAVE){ggsave(filename = here::here("figures", "distribution.png"), width = 7, height = 10, dpi = 300)}
 ```
 
 
@@ -77,26 +81,25 @@ if(SAVE){ggsave(filename = here::here("figures", "distribution.png"), width = 10
 # generics ----
 alpha <- 0.05
 size <- 2
+y_breaks <- 25
 
 # plotting ----
-
 development_plots <- list()
-
 for (i in 1:length(batchruns)) {
   development_plots[[i]] <- development_plot(
-  dataset = get(batchruns[i]), title = batchruns[i], alpha = alpha, size = size, color = COLOR
+    dataset = get(batchruns[i]), 
+    title = PLOT_TITLE[i], 
+    alpha = alpha, 
+    size = size, 
+    color = COLOR,
+    y_breaks = y_breaks
   )
 }
-
-
-ggarrange(
-  plotlist = development_plots,
-  ncol = ceiling(sqrt(length(batchruns))), nrow = floor(sqrt(length(batchruns)))
-) +
+ggarrange(plotlist = development_plots, ncol = 1) +
   theme_axelfraud_arrange()
 
 # saving ----
-if(SAVE){ggsave(filename = here::here("figures", "development.png"), width = 10, height = 10, dpi = 300)}
+if(SAVE){ggsave(filename = here::here("figures", "development.png"), width = 7, height = 10, dpi = 300)}
 ```
 
 
@@ -106,37 +109,61 @@ alpha <- 0.05
 size <- 2
 binwidth <- 1
 
-# create grid plots and list of all plots in correct order ----
-all_plots <- list()
-grid_plots <- list()
-
+# plot different plot types ----
+distribution_plots <- list()
 for (i in 1:length(batchruns)) {
-  grid_plots[[i]] <- config %>% grid_plot(x = "x", y = "y", color = batchruns[i])
-  
+  distribution_plots[[i]] <- distribution_plot(
+    dataset = get(batchruns[i]), 
+    title = element_blank(), 
+    binwidth = binwidth, 
+    color = COLOR,
+    y_breaks = 20,
+    ylim = c(0, 60)
+  ) +
+    coord_flip()
+}
+development_plots <- list()
+for (i in 1:length(batchruns)) {
+  development_plots[[i]] <- development_plot(
+    dataset = get(batchruns[i]), 
+    title = element_blank(), 
+    alpha = alpha, 
+    size = size, 
+    color = COLOR,
+    y_breaks = 25
+  )
+}
+grid_plots <- list()
+for (i in 1:length(batchruns)) {
+  grid_plots[[i]] <- config %>% 
+    grid_plot(
+      x = "x", 
+      y = "y", 
+      color = batchruns[i], 
+      config_title = PLOT_TITLE[i], 
+      title_size = 14
+    )
+}
+
+# create list of all plots in correct order ----
+all_plots <- list()
+for (i in 1:length(batchruns)) {
   all_plots[[length(all_plots) + 1]] <- grid_plots[[i]]
   all_plots[[length(all_plots) + 1]] <- development_plots[[i]]
   all_plots[[length(all_plots) + 1]] <- distribution_plots[[i]]
 }
 
-
 # arrange and save plots ----
 ggarrange(
   plotlist = all_plots,
-  ncol = 3, nrow = 5
+  ncol = 3,
+  nrow = 5
 ) +
   theme_axelfraud_arrange(plot_margin = 15)
 
-if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis_a.png"), width = 14, height = 14, dpi = 300)}
+if(SAVE){ggsave(filename = here::here("figures", "full_visual_analysis.png"), width = 14, height = 14, dpi = 300)}
 ```
 
-
-
-```{r, eval=FALSE}
-# for powerpoint ----
-library(scales)
-show_col(grey_pal(0, 1)(10))
-grDevices::col2rgb("grey40")
-```
 
 
 ```{r, eval=FALSE}
@@ -285,34 +312,7 @@ longterm:
 
 
 
-## Unique Cultures
 
-```{r, eval=FALSE}
-color_scheme <- viridis(300, option = "plasma")
-color_scheme2 <- rep(COLOR, 300)
-
-data %>% 
-  group_by(step, replicate, culture) %>% 
-  summarize(count = n()) %>% 
-  ungroup() %>% 
-  group_by(step, replicate) %>% 
-  summarize(unique_cultures = n()) %>% 
-  ungroup() -> tmp
-
-tmp %>% 
-  ggplot(aes(x = step, y = unique_cultures, color = as.factor(replicate))) +
-  geom_line(alpha = 0.05, size = 2) +
-  scale_color_manual(values = color_scheme2) +
-  labs(
-    title = "Development of unique culture count",
-    x = "Step",
-    y = "Unique cultures"
-  ) +
-  theme(legend.position = "None") +
-  theme_axelfraud()
-
-if(SAVE){ggsave(filename = "unique_cultures.png", width = 10, height = 4, dpi = 300)}
-```
 
 
 

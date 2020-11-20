@@ -12,8 +12,8 @@ AxelFraud.run_batch(
     config_list=config_list,
     batch_name="expanding_square",
     grid_dims=(10, 10),
-    steps=100,
-    replicates=2,
+    steps=3000,
+    replicates=300,
     when=10,
     write=true    
 )
