@@ -6,7 +6,7 @@ mutable struct AxelrodAgent <: Agents.AbstractAgent
     changed_culture::Bool
 end
 
-function initialize_model(dims::NTuple{2, Int}, stubborn_positions::AbstractArray)
+function initialize_model(dims::NTuple{2, Int}, stubborn_positions::Union{AbstractArray, Dict})
     space = Agents.GridSpace(dims, periodic=false, moore=false)
     model = Agents.AgentBasedModel(AxelrodAgent, space, scheduler=random_activation)
     populate!(model, dims)
@@ -22,6 +22,8 @@ function populate!(model::Agents.AgentBasedModel, dims::NTuple{2, Int})
     return model
 end
 
+# MULTIPLE DISPATCH FOR to_stubborn! (COMPETITIVE STUBBORN AGENTS)
+
 function to_stubborn!(positions::Array{NTuple{2, Int}}, model::Agents.AgentBasedModel)
     for pos in positions
         stubborn_agent = Agents.get_node_agents(Agents.coord2vertex(pos, model), model)[1]
@@ -29,6 +31,11 @@ function to_stubborn!(positions::Array{NTuple{2, Int}}, model::Agents.AgentBased
         stubborn_agent.culture = zeros(Int64, 5)
     end
     return model
+end
+
+function to_stubborn!(positions:Dict, model::Agents.AgentBasedModel)
+    # FOR: KEYS DICTIONARY (STUBBORN TYPE) 
+        # DO to_stubborn! (FIRST DISPATCH)
 end
 
 function agent_step!(agent::Agents.AbstractAgent, model::Agents.AgentBasedModel)
