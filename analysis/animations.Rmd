@@ -1,0 +1,91 @@
+---
+title: "Animations"
+author: "Johannes Nakayama"
+date: "20 11 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+library(gganimate)
+library(stringdist)
+source("helpers.R")
+BATCH_NAME <- "expanding_square"
+```
+
+```{r}
+
+batchruns <- character()
+for (filename in list.files(here::here("..", "data", BATCH_NAME))) {
+  varname <- stringr::str_remove(filename, ".feather")
+  
+  if (!grepl("configs", varname)) {
+    batchruns <- append(batchruns, varname)
+    assign(varname, arrow::read_feather(here::here("..", "data", BATCH_NAME, filename))) 
+    assign(varname, format_data(eval(as.symbol(varname))))
+  }  
+}
+
+arrow::read_feather(here::here("..", "data", BATCH_NAME, "configs.feather")) %>% 
+  sapply(as.numeric) %>% 
+  as_tibble() -> config
+
+```
+
+
+```{r}
+
+expanding_square_5
+
+```
+
+
+```{r}
+REPLICATE <- 101
+configuration <- expanding_square_5
+
+configuration %>% 
+  mutate(stubborn_dist = stringdist::stringdist(culture, "00000", method = "hamming")) %>% 
+  filter(replicate == REPLICATE) %>% 
+  select(step, id, x, y, stubborn_dist) -> tmp
+
+tmp %>% 
+  ggplot(aes(x = x, y = y, color = as.factor(stubborn_dist), group = id)) +
+  geom_point(size = 10) +
+  scale_color_brewer(palette = "YlOrRd") +
+  scale_x_continuous(breaks = seq(1, 10, by = 1), limits = c(1, 10)) +
+  scale_y_continuous(breaks = seq(1, 10, by = 1), limits = c(1, 10)) +
+  coord_fixed() +
+  theme_axelfraud() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "None"
+  ) +
+  NULL -> p
+
+p +
+  transition_time(step) +
+  enter_fade() +
+  exit_fade()-> anim
+
+anim
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

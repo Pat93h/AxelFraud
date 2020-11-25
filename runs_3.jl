@@ -1,25 +1,27 @@
 include(joinpath("src", "module.jl"))
 
 config_list = [
-    [(5, 5), (5, 6), (6, 5), (6, 6)],
-    [(4, 4), (4, 7), (7, 4), (7, 7)],
-    [(3, 3), (3, 8), (8, 3), (8, 8)],
-    [(2, 2), (2, 9), (9, 2), (9, 9)],
-    [(1, 1), (1, 10), (10, 1), (10, 10)]
+    Dict(
+        0 => [(1, 1), (1, 2)],
+        1 => [(10, 10), (10, 9)]
+    ),
+    [(3, 3), (5, 5), (7, 7), (9, 9)]
 ]
 
 AxelFraud.run_batch(
     config_list=config_list,
-    batch_name="expanding_square",
+    batch_name="test",
     grid_dims=(10, 10),
-    steps=3000,
-    replicates=300,
+    steps=500,
+    replicates=2,
     when=10,
     write=true    
 )
 
+
+
 AxelFraud.run_random(
-    batch_name="random",
+    batch_name="test",
     grid_dims=(10, 10),
     stubborn_count=10,
     steps=100, 

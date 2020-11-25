@@ -6,7 +6,7 @@ mutable struct AxelrodAgent <: Agents.AbstractAgent
     changed_culture::Bool
 end
 
-function initialize_model(dims::NTuple{2, Int}, stubborn_positions::AbstractArray)
+function initialize_model(dims::NTuple{2, Int}, stubborn_positions::Union{AbstractArray, Dict})
     space = Agents.GridSpace(dims, periodic=false, moore=false)
     model = Agents.AgentBasedModel(AxelrodAgent, space, scheduler=random_activation)
     populate!(model, dims)
@@ -22,11 +22,18 @@ function populate!(model::Agents.AgentBasedModel, dims::NTuple{2, Int})
     return model
 end
 
-function to_stubborn!(positions::Array{NTuple{2, Int}}, model::Agents.AgentBasedModel)
+function to_stubborn!(positions::Array{NTuple{2, Int}}, model::Agents.AgentBasedModel, value::Int64=0)
     for pos in positions
         stubborn_agent = Agents.get_node_agents(Agents.coord2vertex(pos, model), model)[1]
         stubborn_agent.stubborn = true
-        stubborn_agent.culture = zeros(Int64, 5)
+        stubborn_agent.culture = fill(value, 5)
+    end
+    return model
+end
+
+function to_stubborn!(positions::Dict, model::Agents.AgentBasedModel)
+    for key in keys(positions)
+        to_stubborn!(positions[key], model, key)
     end
     return model
 end
@@ -119,7 +126,7 @@ function run_random(;
 end
 
 function run_batch(;
-    config_list::AbstractArray,
+    config_list::Union{AbstractArray, Dict},
     batch_name::String,
     grid_dims::Tuple,
     steps::Int,
@@ -135,7 +142,7 @@ function run_batch(;
     end
     results = DataFrames.DataFrame[]
     p = ProgressMeter.Progress(length(config_list), "Running Simulations ...")
-    for (i, config) in enumerate(config_list)
+    for (i, config) in enumerate(config_list)  # REWRITE FOR DICT!!!!! <- TO DO
         tmp = run_config(
             config_name=batch_name * "_" * string(i),
             batch_name=batch_name,
@@ -168,7 +175,7 @@ function run_config(;
     config_name::String,
     batch_name::String,
     grid_dims::Tuple, 
-    stubborn_positions::AbstractArray,
+    stubborn_positions::Union{AbstractArray, Dict},
     steps::Int, 
     replicates::Int, 
     when::Int, 
