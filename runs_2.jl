@@ -8,12 +8,23 @@ config_list = [
     [(1, 1), (1, 10), (10, 1), (10, 10)]
 ]
 
+# AxelFraud.run_batch(
+#     config_list=config_list,
+#     batch_name="expanding_square",
+#     grid_dims=(10, 10),
+#     steps=3000,
+#     replicates=300,
+#     when=10,
+#     write=true    
+# )
+
 AxelFraud.run_batch(
     config_list=config_list,
-    batch_name="expanding_square",
+    batch_name="test2",
     grid_dims=(10, 10),
-    steps=3000,
-    replicates=300,
+    levels=2,
+    steps=300,
+    replicates=3,
     when=10,
     write=true    
 )

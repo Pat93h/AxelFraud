@@ -5,15 +5,19 @@ config_list = [
         0 => [(1, 1), (1, 2)],
         1 => [(10, 10), (10, 9)]
     ),
-    [(3, 3), (5, 5), (7, 7), (9, 9)]
+    Dict(
+        0 => [(5, 5), (5, 6)],
+        1 => [(6, 5), (6, 6)]
+    )
 ]
 
 AxelFraud.run_batch(
     config_list=config_list,
-    batch_name="test",
+    batch_name="competitive",
     grid_dims=(10, 10),
-    steps=500,
-    replicates=2,
+    levels=2,
+    steps=3000,
+    replicates=300,
     when=10,
     write=true    
 )
